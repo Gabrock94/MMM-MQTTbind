@@ -44,7 +44,30 @@ Module.register("MMM-MQTTbind", {
       case "MQTT_MESSAGE_RECEIVED": {
         for (var i = 0; i < this.config.bindings.subscriptions.length; i++) {
           if(this.config.bindings.subscriptions[i].topic == payload.topic) {
-            this.sendNotification(this.config.bindings.subscriptions[i].notification, payload.message);
+		let parsed;
+		//console.log(`[MMM-MQTTbind] payload:`, parsed);
+		try {
+  			const maybeParsed = JSON.parse(payload.message);
+  			if (typeof maybeParsed === "object" && maybeParsed !== null) {
+    				parsed = maybeParsed; // ✅ use as-is
+	  		} else {
+    				parsed = {
+      					title: "MQTT-1",
+      					message: maybeParsed.toString(),
+      					timer: 5000
+    				};
+  			}
+		} catch (e) {
+  			parsed = {
+    				title: "MQTT-2",
+    				message: payload.message,
+    				timer: 5000
+  			};
+		}
+	//console.log(`[MMM-MQTTbind] Sending notification ${this.config.bindings.subscriptions[i].notification} with payload:`, parsed);
+	//this.sendSocketNotification("LOG", { 'type': 'PORCODIO', 'payload': payload});
+	this.sendNotification(this.config.bindings.subscriptions[i].notification, parsed);
+		//this.sendNotification(this.config.bindings.subscriptions[i].notification, payload.message);
             break;
           }
         }
